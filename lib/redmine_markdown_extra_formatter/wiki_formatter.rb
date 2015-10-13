@@ -99,10 +99,13 @@ module RedmineMarkdownExtraFormatter
 
     def to_html(&block)
       @macros_runner = block
+
       parsedText = BlueFeather.parse(@text)
+      parsedText = grab_checkboxes(parsedText)
       parsedText = inline_macros(parsedText)
       parsedText = syntax_highlight(parsedText)
-    rescue => e
+
+      rescue => e
       return("<pre>problem parsing wiki text: #{e.message}\n"+
              "original text: \n"+
              @text+
@@ -118,6 +121,14 @@ module RedmineMarkdownExtraFormatter
           \}\}                        # closing tag
           )
         /x
+
+    def grab_checkboxes(text)
+      text.gsub!(/\[ \](.*)<\/li>\n/,"<input enabled type='checkbox'  onclick='toggle(this)' data='\\1'>\\1\n")
+      text.gsub!(/\[x\](.*)<\/li>\n/,"<input enabled checked type='checkbox'  onclick='toggle(this)'data='\\1'>\\1\n")
+
+      text
+    end
+
 
     def inline_macros(text)
       text.gsub!(MACROS_RE) do
